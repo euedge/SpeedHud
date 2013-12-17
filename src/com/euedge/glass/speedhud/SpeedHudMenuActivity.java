@@ -93,6 +93,9 @@ public class SpeedHudMenuActivity extends Activity {
         case R.id.uom_kt:
             mSpeedHudService.getSpeedHudService().setUom(SpeedHudView.UOM_KT);
             return true;
+        case R.id.uom_mps:
+            mSpeedHudService.getSpeedHudService().setUom(SpeedHudView.UOM_MPS);
+            return true;
         case R.id.stop:
             stopService(new Intent(this, SpeedHudService.class));
             return true;

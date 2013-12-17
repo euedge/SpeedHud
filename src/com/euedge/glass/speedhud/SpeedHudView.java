@@ -17,6 +17,7 @@
 package com.euedge.glass.speedhud;
 
 import java.io.File;
+import java.text.DecimalFormat;
 import java.text.NumberFormat;
 
 import android.animation.Animator;
@@ -45,6 +46,7 @@ public class SpeedHudView extends View {
     public static final int UOM_KMH = 0;
     public static final int UOM_MPH = 1;
     public static final int UOM_KT = 2;
+    public static final int UOM_MPS = 3;
     public static final int UOM_DEFAULT = UOM_MPH;
     
     private static final double KMH_IN_MPS = 0.277777778;
@@ -53,17 +55,20 @@ public class SpeedHudView extends View {
     
 
     /** Various dimensions and other drawing-related constants. */
-    private static final float NEEDLE_WIDTH = 6;
-    private static final float NEEDLE_HEIGHT = 15;
-    private static final int NEEDLE_COLOR = Color.RED;
-    private static final int DIRECTION_TEXT_COLOR = Color.WHITE;
-    private static final int SPEED_COLOR = Color.GREEN;
+    private static final float NEEDLE_WIDTH = 1;
+    private static final float NEEDLE_HEIGHT = 44;
+    private static final int NEEDLE_COLOR = 0xffcc3333;
+    private static final int DIRECTION_TEXT_COLOR = 0xffffffff;
+    private static final int SPEED_COLOR = 0xff99cc33;
+    private static final int SPEED_UOM_COLOR = 0xffffffff;
     private static final float TICK_WIDTH = 2;
-    private static final float TICK_HEIGHT = 10;
+    private static final float TICK_LONG_HEIGHT = 40;
+    private static final float TICK_SHORT_HEIGHT = 20;
+    private static final int TICK_LONG_COLOR = 0xffffffff;
+    private static final int TICK_SHORT_COLOR = 0xff808080;
     private static final float DIRECTION_TEXT_HEIGHT = 36.0f;
-    private static final float COMPASS_HEIGHT = NEEDLE_HEIGHT * 2.f + DIRECTION_TEXT_HEIGHT;
-    private static final float SPEED_TEXT_HEIGHT = 200.0f;
-    private static final float UOM_TEXT_HEIGHT = 64.0f;
+    private static final float SPEED_TEXT_HEIGHT = 256.0f;
+    private static final float UOM_TEXT_HEIGHT = 72.0f;
 
     /**
      * If the difference between two consecutive headings is less than this value, the canvas will
@@ -112,7 +117,7 @@ public class SpeedHudView extends View {
         mCompassTypeface = Typeface.createFromFile(new File("/system/glass_fonts",
                                                     "Roboto-Thin.ttf"));
         mSpeedTypeface = Typeface.createFromFile(new File("/system/glass_fonts",
-                                                    "Roboto-Black.ttf"));
+                                                    "Roboto-Thin.ttf"));
 
         
         mTickPaint = new Paint();
@@ -138,6 +143,12 @@ public class SpeedHudView extends View {
         mAnimator = new ValueAnimator();
         setupAnimator();
     }
+
+    @Override
+    protected void onWindowVisibilityChanged(int visibility) {
+        setVisibility(VISIBLE);
+    }
+
 
     /**
      * Sets the instance of {@link OrientationManager} that this view will use to get the current
@@ -188,6 +199,7 @@ public class SpeedHudView extends View {
         case UOM_KMH: this.uom = UOM_KMH; break;
         case UOM_MPH: this.uom = UOM_MPH; break;
         case UOM_KT:  this.uom = UOM_KT; break;
+        case UOM_MPS: this.uom = UOM_MPS; break;
         default:      this.uom = UOM_DEFAULT;
         }
         
@@ -206,19 +218,16 @@ public class SpeedHudView extends View {
         // equal to one full view cycle.
         float pixelsPerDegree = getWidth() / 90.0f;
         float centerX = getWidth() / 2.0f;
-        float centerY = COMPASS_HEIGHT / 2.0f;
 
         canvas.save();
-        canvas.translate(-mAnimatedHeading * pixelsPerDegree + centerX, centerY);
+        canvas.translate(-mAnimatedHeading * pixelsPerDegree + centerX, 0);
 
         // draw the compass
         drawCompassDirections(canvas, pixelsPerDegree);
         
         canvas.restore();
         
-        mPaint.setColor(NEEDLE_COLOR);
-        drawNeedle(canvas, false);
-        drawNeedle(canvas, true);
+        drawNeedle(canvas);
         
         // now the speed
         drawSpeed(canvas);
@@ -233,6 +242,7 @@ public class SpeedHudView extends View {
     private void drawCompassDirections(Canvas canvas, float pixelsPerDegree) {
         float degreesPerTick = 360.0f / mDirections.length;
 
+        mPaint.setStrokeWidth(TICK_WIDTH);
         mPaint.setColor(DIRECTION_TEXT_COLOR);
         mPaint.setTextSize(DIRECTION_TEXT_HEIGHT);
         mPaint.setTypeface(mCompassTypeface);
@@ -247,11 +257,21 @@ public class SpeedHudView extends View {
 
                 canvas.drawText(direction,
                         i * degreesPerTick * pixelsPerDegree - mTextBounds.width() / 2,
-                        mTextBounds.height() / 2, mPaint);
+                        70 + mTextBounds.height() / 2, mPaint);
+            }
+        }
+        
+        // overdraw
+        for (int i = -180; i <= 540; i += 15) {
+            if ((i % 45) == 0) {
+                mPaint.setColor(TICK_LONG_COLOR);
+                canvas.drawLine(i * pixelsPerDegree, 0,
+                                i * pixelsPerDegree, TICK_LONG_HEIGHT,
+                                mTickPaint);
             } else {
-                // Draw a tick mark for the odd indices.
-                canvas.drawLine(i * degreesPerTick * pixelsPerDegree, -TICK_HEIGHT / 2,
-                        i * degreesPerTick * pixelsPerDegree, TICK_HEIGHT / 2,
+                mPaint.setColor(TICK_SHORT_COLOR);
+                canvas.drawLine(i * pixelsPerDegree, 10,
+                        i * pixelsPerDegree, 10 + TICK_SHORT_HEIGHT,
                         mTickPaint);
             }
         }
@@ -263,7 +283,6 @@ public class SpeedHudView extends View {
      * @param canvas the {@link Canvas} upon which to draw
      */
     private void drawSpeed(Canvas canvas) {
-        mPaint.setColor(SPEED_COLOR);
         mPaint.setTypeface(mSpeedTypeface);
         
         int speed = (int) mOrientation.getLocation().getSpeed();
@@ -281,6 +300,7 @@ public class SpeedHudView extends View {
             speed /= KT_IN_MPS;
             uomStr = " kt";
             break;
+        case UOM_MPS:
         default:
             uomStr = " m/s";
         }
@@ -288,69 +308,44 @@ public class SpeedHudView extends View {
             speed = 999;
         }
         
-        String speedStr = Integer.toString(speed);
+        final DecimalFormat smallNumberFormat = new DecimalFormat("0.0");
+        
+        String speedStr = speed < 10 ? smallNumberFormat.format(speed)
+                        : Integer.toString(speed);
         String testStr = "000";
         mPaint.setTextSize(SPEED_TEXT_HEIGHT);
         mPaint.getTextBounds(testStr, 0, testStr.length(), mTextBounds);
-        int numberWidth = mTextBounds.width();
-        int numberHeight = mTextBounds.height();
         mPaint.setTextSize(UOM_TEXT_HEIGHT);
         mPaint.getTextBounds(uomStr, 0, uomStr.length(), mTextBounds);
-        int uomWidth = mTextBounds.width();
-        
-        float marginLeft = (getWidth() - (numberWidth + uomWidth + 60)) / 2.0f;
-        float marginBottom = (getHeight() - COMPASS_HEIGHT - numberHeight) / 2.f;
         
         Paint.Align oldAlign = mPaint.getTextAlign();
+        
         mPaint.setTextAlign(Paint.Align.RIGHT);
-        
         mPaint.setTextSize(SPEED_TEXT_HEIGHT);
-        canvas.drawText(speedStr,
-                marginLeft + numberWidth,
-                getHeight() - marginBottom,
-                mPaint);
+        mPaint.setColor(SPEED_COLOR);
+        canvas.drawText(speedStr, getWidth() - 218, getHeight() - 40, mPaint);
         
+        mPaint.setTextAlign(Paint.Align.LEFT);
         mPaint.setTextSize(UOM_TEXT_HEIGHT);
-        canvas.drawText(uomStr,
-                marginLeft + numberWidth + 60 + uomWidth,
-                getHeight() - marginBottom,
-                mPaint);
+        mPaint.setColor(SPEED_UOM_COLOR);
+        canvas.drawText(uomStr, 442, getHeight() - 40, mPaint);
         
         mPaint.setTextAlign(oldAlign);
     }
 
     
     /**
-     * Draws a needle that is centered at the top or bottom of the compass.
+     * Draws a needle that highlights the center of the compass.
      *
      * @param canvas the {@link Canvas} upon which to draw
-     * @param bottom true to draw the bottom needle, or false to draw the top needle
      */
-    private void drawNeedle(Canvas canvas, boolean bottom) {
-        float centerX = getWidth() / 2.0f;
-        float origin;
-        float sign;
+    private void drawNeedle(Canvas canvas) {
+        mPaint.setColor(NEEDLE_COLOR);
+        mPaint.setStrokeWidth(NEEDLE_WIDTH);
 
-        // Flip the vertical coordinates if we're drawing the bottom needle.
-        if (bottom) {
-            origin = COMPASS_HEIGHT;
-            sign = -1;
-        } else {
-            origin = 0;
-            sign = 1;
-        }
-
-        float needleHalfWidth = NEEDLE_WIDTH / 2;
-
-        mPath.reset();
-        mPath.moveTo(centerX - needleHalfWidth, origin);
-        mPath.lineTo(centerX - needleHalfWidth, origin + sign * (NEEDLE_HEIGHT - 4));
-        mPath.lineTo(centerX, origin + sign * NEEDLE_HEIGHT);
-        mPath.lineTo(centerX + needleHalfWidth, origin + sign * (NEEDLE_HEIGHT - 4));
-        mPath.lineTo(centerX + needleHalfWidth, origin);
-        mPath.close();
-
-        canvas.drawPath(mPath, mPaint);
+        canvas.drawLine(313, 0, 313, NEEDLE_HEIGHT, mPaint);
+        canvas.drawLine(313, NEEDLE_HEIGHT, 325, NEEDLE_HEIGHT, mPaint);
+        canvas.drawLine(325, 0, 325, NEEDLE_HEIGHT, mPaint);
     }
 
     /**

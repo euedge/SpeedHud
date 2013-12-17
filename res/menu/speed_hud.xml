@@ -31,4 +31,8 @@
         android:id="@+id/uom_kt"
         android:title="@string/uom_kt"
         android:icon="@drawable/ic_read_aloud"/>
+    <item
+        android:id="@+id/uom_mps"
+        android:title="@string/uom_mps"
+        android:icon="@drawable/ic_read_aloud"/>
 </menu>

@@ -23,6 +23,7 @@
     <string name="uom_kmh">km/h</string>
     <string name="uom_mph">mph</string>
     <string name="uom_kt">kt</string>
+    <string name="uom_mps">m/s</string>
     
     <!-- Strings describing locations. -->
     <string-array name="direction_abbreviations">
