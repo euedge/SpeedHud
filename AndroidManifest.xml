@@ -29,7 +29,7 @@
     <application
         android:allowBackup="true"
         android:label="@string/app_name"
-        android:icon="@drawable/ic_compass" >
+        android:icon="@drawable/speed_icon_50" >
 
         <uses-library
             android:name="com.google.android.glass"
@@ -42,7 +42,7 @@
         <service
             android:name="com.euedge.glass.speedhud.SpeedHudService"
             android:label="@string/app_name"
-            android:icon="@drawable/ic_compass"
+            android:icon="@drawable/speed_icon_50"
             android:enabled="true" >
             <intent-filter>
                 <action android:name="com.google.android.glass.action.VOICE_TRIGGER" />

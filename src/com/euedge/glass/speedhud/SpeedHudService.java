@@ -31,6 +31,7 @@ import android.speech.tts.TextToSpeech;
 import com.euedge.glass.speedhud.util.MathUtils;
 import com.google.android.glass.timeline.LiveCard;
 import com.google.android.glass.timeline.TimelineManager;
+import com.google.android.glass.timeline.LiveCard.PublishMode;
 
 /**
  * The main application service that manages the lifetime of the speed HUD live card.
@@ -115,10 +116,10 @@ public class SpeedHudService extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         if (mLiveCard == null) {
-            mLiveCard = mTimelineManager.getLiveCard(LIVE_CARD_ID);
+            mLiveCard = mTimelineManager.createLiveCard(LIVE_CARD_ID);
             mRenderer = new SpeedHudRenderer(this, mOrientationManager);
 
-            LiveCard direct = mLiveCard.enableDirectRendering(true);
+            LiveCard direct = mLiveCard.setDirectRenderingEnabled(true);
             direct.getSurfaceHolder().addCallback(mRenderer);
             direct.getSurfaceHolder().setKeepScreenOn(true);
 
@@ -127,8 +128,7 @@ public class SpeedHudService extends Service {
             menuIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
             mLiveCard.setAction(PendingIntent.getActivity(this, 0, menuIntent, 0));
             
-            mLiveCard.setNonSilent(true);
-            mLiveCard.publish();
+            mLiveCard.publish(PublishMode.REVEAL);
         }
         
         SharedPreferences prefs =

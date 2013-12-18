@@ -22,17 +22,17 @@
     <item
         android:id="@+id/uom_kmh"
         android:title="@string/uom_kmh"
-        android:icon="@drawable/ic_read_aloud"/>
+        android:icon="@drawable/ic_done_50"/>
     <item
         android:id="@+id/uom_mph"
         android:title="@string/uom_mph"
-        android:icon="@drawable/ic_read_aloud"/>
+        android:icon="@drawable/ic_done_50"/>
     <item
         android:id="@+id/uom_kt"
         android:title="@string/uom_kt"
-        android:icon="@drawable/ic_read_aloud"/>
+        android:icon="@drawable/ic_done_50"/>
     <item
         android:id="@+id/uom_mps"
         android:title="@string/uom_mps"
-        android:icon="@drawable/ic_read_aloud"/>
+        android:icon="@drawable/ic_done_50"/>
 </menu>
