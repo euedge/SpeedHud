@@ -8,6 +8,13 @@ How it Feels
 
 ![How it Feels](https://raw.github.com/euedge/SpeedHud/master/visuals/glass_project_contextual.jpg)
 
+
+Activate
+========
+
+OK, glass. Show Speed!
+
+
 Screenshot
 ==========
 
