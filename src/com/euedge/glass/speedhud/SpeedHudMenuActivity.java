@@ -1,4 +1,9 @@
 /*
+ * Copyright (C) 2013 EU Edge LLC
+ *
+ * This code is modification of a work of The Android Open Source Project,
+ * see the original license statement below.
+ *
  * Copyright (C) 2013 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,7 +18,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.euedge.glass.speedhud;
 
 import android.app.Activity;

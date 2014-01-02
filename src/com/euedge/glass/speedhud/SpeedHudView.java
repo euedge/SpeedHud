@@ -1,4 +1,9 @@
 /*
+ * Copyright (C) 2013 EU Edge LLC
+ *
+ * This code is modification of a work of The Android Open Source Project,
+ * see the original license statement below.
+ *
  * Copyright (C) 2013 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
