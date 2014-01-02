@@ -12,7 +12,7 @@ How it Feels
 Activate
 ========
 
-OK, glass. Show Speed!
+OK, Glass. Show Speed!
 
 
 Screenshot
