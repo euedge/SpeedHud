@@ -35,7 +35,6 @@ import android.speech.tts.TextToSpeech;
 
 import com.euedge.glass.speedhud.util.MathUtils;
 import com.google.android.glass.timeline.LiveCard;
-import com.google.android.glass.timeline.TimelineManager;
 import com.google.android.glass.timeline.LiveCard.PublishMode;
 
 /**
@@ -43,7 +42,7 @@ import com.google.android.glass.timeline.LiveCard.PublishMode;
  */
 public class SpeedHudService extends Service {
 
-    private static final String LIVE_CARD_ID = "speed_hud";
+    private static final String LIVE_CARD_TAG = "speed_hud";
     
     private static final String PREFERENCES_NAME = SpeedHudService.class.toString();
     private static final String PREFS_UOM_KEY = "key_uom";
@@ -85,15 +84,12 @@ public class SpeedHudService extends Service {
     private OrientationManager mOrientationManager;
     private TextToSpeech mSpeech;
 
-    private TimelineManager mTimelineManager;
     private LiveCard mLiveCard;
     private SpeedHudRenderer mRenderer;
     
     @Override
     public void onCreate() {
         super.onCreate();
-
-        mTimelineManager = TimelineManager.from(this);
 
         // Even though the text-to-speech engine is only used in response to a menu action, we
         // initialize it when the application starts so that we avoid delays that could occur
@@ -121,7 +117,7 @@ public class SpeedHudService extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         if (mLiveCard == null) {
-            mLiveCard = mTimelineManager.createLiveCard(LIVE_CARD_ID);
+            mLiveCard = new LiveCard(this, LIVE_CARD_TAG);
             mRenderer = new SpeedHudRenderer(this, mOrientationManager);
 
             LiveCard direct = mLiveCard.setDirectRenderingEnabled(true);
@@ -132,7 +128,7 @@ public class SpeedHudService extends Service {
             Intent menuIntent = new Intent(this, SpeedHudMenuActivity.class);
             menuIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
             mLiveCard.setAction(PendingIntent.getActivity(this, 0, menuIntent, 0));
-            
+            mLiveCard.attach(this);
             mLiveCard.publish(PublishMode.REVEAL);
         }
         
@@ -154,7 +150,6 @@ public class SpeedHudService extends Service {
 
         if (mLiveCard != null && mLiveCard.isPublished()) {
             mLiveCard.unpublish();
-            mLiveCard.getSurfaceHolder().removeCallback(mRenderer);
             mLiveCard = null;
         }
 

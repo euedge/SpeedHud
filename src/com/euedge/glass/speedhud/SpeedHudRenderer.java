@@ -34,12 +34,14 @@ import android.widget.FrameLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
+import com.google.android.glass.timeline.DirectRenderingCallback;
+
 /**
  * The surface callback that provides the rendering logic for the speed HUD live card. This callback
  * also manages the lifetime of the sensor and location event listeners (through
  * {@link OrientationManager}) so that tracking only occurs when the card is visible.
  */
-public class SpeedHudRenderer implements SurfaceHolder.Callback {
+public class SpeedHudRenderer implements DirectRenderingCallback {
 
     private static final String TAG = SpeedHudRenderer.class.getSimpleName();
 
@@ -61,6 +63,8 @@ public class SpeedHudRenderer implements SurfaceHolder.Callback {
     private RenderThread mRenderThread;
     private int mSurfaceWidth;
     private int mSurfaceHeight;
+    
+    private boolean mRenderingPaused;
 
     private final FrameLayout mLayout;
     private final SpeedHudView mSpeedHudView;
@@ -121,23 +125,48 @@ public class SpeedHudRenderer implements SurfaceHolder.Callback {
 
     @Override
     public void surfaceCreated(SurfaceHolder holder) {
+        // The creation of a new Surface implicitly resumes the rendering.
+        mRenderingPaused = false;
         mHolder = holder;
-
-        mOrientationManager.addOnChangedListener(mSpeedHudListener);
-        mOrientationManager.start();
-
-        mRenderThread = new RenderThread();
-        mRenderThread.start();
+        updateRenderingState();
     }
 
     @Override
+    public void renderingPaused(SurfaceHolder holder, boolean paused) {
+        mRenderingPaused = paused;
+        updateRenderingState();
+    }
+    
+    @Override
     public void surfaceDestroyed(SurfaceHolder holder) {
-        mRenderThread.quit();
-
-        mOrientationManager.removeOnChangedListener(mSpeedHudListener);
-        mOrientationManager.stop();
+        mHolder = null;
+        updateRenderingState();
     }
 
+    /**
+     * Starts or stops rendering according to the {@link LiveCard}'s state.
+     */
+    private void updateRenderingState() {
+        boolean shouldRender = (mHolder != null) && !mRenderingPaused;
+        boolean isRendering = (mRenderThread != null);
+
+        if (shouldRender != isRendering) {
+            if (shouldRender) {
+                mOrientationManager.addOnChangedListener(mSpeedHudListener);
+                mOrientationManager.start();
+
+                mRenderThread = new RenderThread();
+                mRenderThread.start();
+            } else {
+                mRenderThread.quit();
+                mRenderThread = null;
+
+                mOrientationManager.removeOnChangedListener(mSpeedHudListener);
+                mOrientationManager.stop();
+            }
+        }
+     }    
+    
     /**
      * Requests that the views redo their layout. This must be called manually every time the
      * tips view's text is updated because this layout doesn't exist in a GUI thread where those

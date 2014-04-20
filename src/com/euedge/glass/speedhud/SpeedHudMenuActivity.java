@@ -25,6 +25,7 @@ import android.content.ComponentName;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.IBinder;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -35,8 +36,10 @@ import android.view.MenuItem;
  */
 public class SpeedHudMenuActivity extends Activity {
 
+    private final Handler mHandler = new Handler();
     private SpeedHudService.SpeedHudBinder mSpeedHudService;
-    private boolean mResumed;
+    private boolean mAttachedToWindow;
+    private boolean mOptionsMenuOpen;
 
     private ServiceConnection mConnection = new ServiceConnection() {
         @Override
@@ -60,21 +63,21 @@ public class SpeedHudMenuActivity extends Activity {
     }
 
     @Override
-    protected void onResume() {
-        super.onResume();
-        mResumed = true;
+    public void onAttachedToWindow() {
+        super.onAttachedToWindow();
+        mAttachedToWindow = true;
         openOptionsMenu();
     }
 
     @Override
-    protected void onPause() {
-        super.onPause();
-        mResumed = false;
+    public void onDetachedFromWindow() {
+        super.onDetachedFromWindow();
+        mAttachedToWindow = false;
     }
 
     @Override
     public void openOptionsMenu() {
-        if (mResumed && mSpeedHudService != null) {
+        if (!mOptionsMenuOpen && mAttachedToWindow && mSpeedHudService != null) {
             super.openOptionsMenu();
         }
     }
@@ -101,7 +104,15 @@ public class SpeedHudMenuActivity extends Activity {
             mSpeedHudService.getSpeedHudService().setUom(SpeedHudView.UOM_MPS);
             return true;
         case R.id.stop:
-            stopService(new Intent(this, SpeedHudService.class));
+            // Stop the service at the end of the message queue for proper options menu
+            // animation. This is only needed when starting an Activity or stopping a Service
+            // that published a LiveCard.
+            mHandler.post(new Runnable() {
+                @Override
+                 public void run() {
+                     stopService(new Intent(SpeedHudMenuActivity.this, SpeedHudService.class));
+                 }
+             });
             return true;
         default:
             return super.onOptionsItemSelected(item);
@@ -111,6 +122,7 @@ public class SpeedHudMenuActivity extends Activity {
     @Override
     public void onOptionsMenuClosed(Menu menu) {
         super.onOptionsMenuClosed(menu);
+        mOptionsMenuOpen = false;
 
         unbindService(mConnection);
 

@@ -22,6 +22,7 @@
 package com.euedge.glass.speedhud;
 
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
@@ -97,7 +98,6 @@ public class OrientationManager {
 
     private final SensorManager mSensorManager;
     private final LocationManager mLocationManager;
-    private final String mLocationProvider;
     private final Set<OnChangedListener> mListeners;
     private final float[] mRotationMatrix;
     private final float[] mOrientation;
@@ -184,13 +184,6 @@ public class OrientationManager {
         mSensorManager = sensorManager;
         mLocationManager = locationManager;
         mListeners = new LinkedHashSet<OnChangedListener>();
-
-        Criteria criteria = new Criteria();
-        criteria.setAccuracy(Criteria.ACCURACY_FINE);
-        criteria.setBearingRequired(true);
-        criteria.setSpeedRequired(true);
-
-        mLocationProvider = mLocationManager.getBestProvider(criteria, true /* enabledOnly */);
     }
 
     /**
@@ -234,10 +227,16 @@ public class OrientationManager {
                 }
             }
 
-            if (mLocationProvider != null) {
-                mLocationManager.requestLocationUpdates(mLocationProvider,
-                        MILLIS_BETWEEN_LOCATIONS, METERS_BETWEEN_LOCATIONS, mLocationListener,
-                        Looper.getMainLooper());
+            Criteria criteria = new Criteria();
+            criteria.setAccuracy(Criteria.ACCURACY_FINE);
+            criteria.setBearingRequired(false);
+            criteria.setSpeedRequired(false);
+
+            List<String> providers =
+                    mLocationManager.getProviders(criteria, true /* enabledOnly */);
+            for (String provider : providers) {
+                mLocationManager.requestLocationUpdates(provider,                        MILLIS_BETWEEN_LOCATIONS, METERS_BETWEEN_LOCATIONS, mLocationListener,
+                Looper.getMainLooper());
             }
 
             mTracking = true;

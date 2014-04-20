@@ -119,10 +119,8 @@ public class SpeedHudView extends View {
         mPaint.setStyle(Paint.Style.FILL);
         mPaint.setAntiAlias(true);
 
-        mCompassTypeface = Typeface.createFromFile(new File("/system/glass_fonts",
-                                                    "Roboto-Thin.ttf"));
-        mSpeedTypeface = Typeface.createFromFile(new File("/system/glass_fonts",
-                                                    "Roboto-Thin.ttf"));
+        mCompassTypeface = Typeface.create("sans-serif-thin", Typeface.NORMAL);
+        mSpeedTypeface = Typeface.create("sans-serif-thin", Typeface.NORMAL);
 
         
         mTickPaint = new Paint();
